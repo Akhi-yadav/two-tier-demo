@@ -59,4 +59,4 @@ jobs:
 
       - name: Update Kubernetes manifests with new image
         run: |
-          sed -i 's|image: .*|image: ${{ secrets.DOCKER_USERNAME }}/two-tier-flask-app:${{ github.sha }}|' k8s/two-tier-app-deployment.yaml
+          sed -i 's|image: .*|image: ${{ secrets.DOCKER_USERNAME }}/two-tier-flask-app:${{ github.sha }}|' k8s/two-tier-app-deployment.yml
