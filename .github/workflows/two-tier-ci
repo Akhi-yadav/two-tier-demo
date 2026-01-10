@@ -1,1 +1,58 @@
+name: Build and Publish Python app
 
+on: 
+  push:
+    branches:
+      - main
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    # step 1: checkout the code
+    -name: Checkout repository code
+     uses: actions/checkout@v2
+    # step 2: set up Python environment
+    -name: Set up Python 3.8
+     uses: actions/setup-python@v4
+     with:
+       python-version: '3.9'
+
+    # step 3: install dependencies
+    -name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+dockerize:
+needs: build
+runs-on: ubuntu-latest
+steps:
+  - name: Checkout repository code
+    uses: actions/checkout@v2
+  - name: Set up Docker Buildx
+    uses: docker/setup-buildx-action@v1
+
+  - name: Log in to Docker Hub
+    uses: docker/login-action@v1
+    with:
+      username: ${{ secrets.DOCKER_USERNAME }}
+      password: ${{ secrets.DOCKER_PASSWORD }}
+  - name: Build Docker image
+    run: |
+      docker build -t two-tier-flask-app .
+  
+  - name: Tag Docker image
+    run: |
+      docker tag two-tier-flask-app ${{ secrets.DOCKER_USERNAME }}/two-tier-flask-app:{{ github.sha }}
+  - name: Push Docker image to Docker Hub
+    run: |
+      docker push ${{ secrets.DOCKER_USERNAME }}/two-tier-flask-app:{{ github.sha }}
+
+  - name: Verify Docker image push
+    run: |
+      docker pull ${{ secrets.DOCKER_USERNAME }}/two-tier-flask-app:{{ github.sha }}
+
+  - name: Update Kubernetes manifests with new image
+    run: |
+      sed -i 's|image: .*|image: ${{ secrets.DOCKER_USERNAME }}/two-tier-flask-app:{{ github.sha }}|' k8s/two-tier-app-deployment.yaml
