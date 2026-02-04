@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: two-tier-app
-          image: acrmycontainer01.azurecr.io/two-tier-flask:v1
+          image: acrmycontainer01.azurecr.io/two-tier-flask-app:61dd6cd07f5c736a783a093b84d1f6c056d0d769
           env:
             - name: MYSQL_HOST
               value: " 10.0.226.2 "          # this is your mysql's service clusture IP, Make sure to change it with yours
