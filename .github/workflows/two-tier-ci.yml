@@ -73,8 +73,7 @@ jobs:
         run: |
           docker build -t ${{ secrets.ACR_NAME }}.azurecr.io/two-tier-flask-app:${{ github.sha }} .
           docker push ${{ secrets.ACR_NAME }}.azurecr.io/two-tier-flask-app:${{ github.sha }}
-          docker tag ${{ secrets.ACR_NAME }}.azurecr.io/two-tier-flask-app:${{ github.sha }} ${{ secrets.ACR_NAME }}.azurecr.io/two-tier-flask-app:latest
-          docker push ${{ secrets.ACR_NAME }}.azurecr.io/two-tier-flask-app:latest
+         
       
       - name: Update Kubernetes manifests with new ACR image
         run: |
@@ -88,3 +87,11 @@ jobs:
           # Show updated file
           echo "=== After update ==="
           grep "image:" k8s/two-tier-app-deployment.yml
+      
+      - name: Commit and Push updated manifests to GitHub
+        run: |
+          git config --global user.name "GitHub Actions Bot"
+          git config --global user.email "actions@github.com"
+          git add k8s/two-tier-app-deployment.yml
+          git commit -m "Update image to ${{ secrets.ACR_NAME }}.azurecr.io/two-tier-flask-app:${{ github.sha }}" || echo "No changes to commit"
+          git push origin main
