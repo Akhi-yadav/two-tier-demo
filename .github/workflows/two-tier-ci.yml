@@ -73,9 +73,18 @@ jobs:
         run: |
           docker build -t ${{ secrets.ACR_NAME }}.azurecr.io/two-tier-flask-app:${{ github.sha }} .
           docker push ${{ secrets.ACR_NAME }}.azurecr.io/two-tier-flask-app:${{ github.sha }}
-          # docker push ${{ secrets.ACR_NAME }}.azurecr.io/two-tier-flask-app:latest
+          docker tag ${{ secrets.ACR_NAME }}.azurecr.io/two-tier-flask-app:${{ github.sha }} ${{ secrets.ACR_NAME }}.azurecr.io/two-tier-flask-app:latest
+          docker push ${{ secrets.ACR_NAME }}.azurecr.io/two-tier-flask-app:latest
       
-          
-      - name: Update Kubernetes manifests with new image
+      - name: Update Kubernetes manifests with new ACR image
         run: |
-          sed -i 's|image: .*|image: ${{ secrets.DOCKER_USERNAME }}/two-tier-flask-app:${{ github.sha }}|' k8s/two-tier-app-deployment.yml
+          # Show original file
+          echo "=== Before update ==="
+          grep "image:" k8s/two-tier-app-deployment.yml
+          
+          # Update the image line - replace any image with ACR image
+          sed -i "s|image:.*|image: ${{ secrets.ACR_NAME }}.azurecr.io/two-tier-flask-app:${{ github.sha }}|" k8s/two-tier-app-deployment.yml
+          
+          # Show updated file
+          echo "=== After update ==="
+          grep "image:" k8s/two-tier-app-deployment.yml
